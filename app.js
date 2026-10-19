@@ -167,7 +167,7 @@ function watchAd(cb){
   $('#adCancel').onclick=()=>close();
   function close(){ clearInterval(adIv); $('#ad').hidden=true; if(curTimer) curTimer.resume(); }
 }
-$('#hintBtn').onclick=()=>{ if(cur.hint) watchAd(cur.hint); };
+$('#hintBtn').onclick=()=>{ if(cur.hint){ G.ads++; sfx.whoosh(); cur.hint(); } };
 $('#skipBtn').onclick=()=>{ if(cur.skip){ sfx.tap(); cur.skip(); } };
 
 /* ===== THÀNH PHẦN: XẾP Ô (chữ cái & từ) ===== */
@@ -326,7 +326,7 @@ function startR3(){
     box.innerHTML=`${ladder()}<div class="qtype">Ô chữ ${W.length} chữ cái</div><div class="row1"></div>
       <div class="def">${esc(q.d)}</div>
       <form class="answer" autocomplete="off"><input aria-label="Đáp án ô chữ" placeholder="Gõ đáp án có dấu" enterkeyhint="send" autocapitalize="off" spellcheck="false"><button class="btn gold small" type="submit">Trả lời</button></form>
-      <div class="after"><p class="muted" style="font-size:13px">Chữ cái đầu đã mở. Sau 15 giây mở thêm một ô bất kỳ; xem quảng cáo để mở ngay một ô.</p></div>`;
+      <div class="after"><p class="muted" style="font-size:13px">Chữ cái đầu đã mở. Sau 15 giây mở thêm một ô bất kỳ; bấm Gợi ý để mở ngay một ô.</p></div>`;
     const cells=box.querySelector('.row1'), form=box.querySelector('form'), inp=form.querySelector('input'), after=box.querySelector('.after');
     const drawC=all=>{ cells.innerHTML=W.map((ch,k)=>{ const v=all||open.has(k); return `<div class="c ${v?'':'hid'} ${all&&!open.has(k)?'rv':''}">${v?esc(ch):'·'}</div>`; }).join(''); };
     const openOne=()=>{ const left=W.map((_,k)=>k).filter(k=>!open.has(k)); if(left.length>1){ open.add(left[rnd(0,left.length-1)]); drawC(); sfx.whoosh(); } };
@@ -386,7 +386,7 @@ function finale(){
   const win=G.r3==='win';
   win ? sfx.fanfare() : sfx.lose();
   if(G.T.daily) logDay(me().score);
-  const head = win ? (G.practice?'Soán ngôi thành công (luyện tập)':'Bạn là Vua Tiếng Việt!') : KING+' giữ ngai vàng';
+  const head = win ? (G.practice?'Soán ngôi thành công (luyện tập)':'Bạn đã lên ngai vàng!') : KING+' giữ ngai vàng';
   const sub = win ? 'Bạn vượt qua cả 8 ô chữ.'
     : G.r3==='stop' ? `Bạn dừng sau ${G.reached} câu đúng và giữ ${G.bank} điểm thưởng.`
     : G.r3==='quit' ? 'Bạn dừng cuộc chơi trước khi trả lời.'
@@ -396,9 +396,9 @@ function finale(){
       <span class="eyebrow">Vòng Soán ngôi · ${G.T.daily?'đề hôm nay':'chủ đề '+esc(G.T.name)}</span>
       <h2 class="big">${head}</h2><p class="muted">${sub}</p>
     </div>
-    <div class="stats"><div><b>${me().score}</b><span>Tổng điểm</span></div><div><b>${G.right}</b><span>Câu đúng</span></div><div><b>${G.ads}</b><span>Quảng cáo đã xem</span></div></div>
+    <div class="stats"><div><b>${me().score}</b><span>Tổng điểm</span></div><div><b>${G.right}</b><span>Câu đúng</span></div><div><b>${G.ads}</b><span>Gợi ý đã dùng</span></div></div>
     <button class="btn gold" id="again2">Về trang chủ</button>
-    <p class="note">Các số tự soạn và ô chữ Soán ngôi do Claude soạn, đang chờ bạn duyệt. Đề mùa 3 lấy từ file bạn gửi. Thời gian, điểm số và đối thủ ảo là tạm đặt.</p>`;
+    <p class="note">Đề tự soạn để luyện tập, không phải đề phát sóng. Thời gian, điểm số và đối thủ ảo là mô phỏng.</p>`;
   show('final');
   $('#again2').onclick=goHome;
 }
