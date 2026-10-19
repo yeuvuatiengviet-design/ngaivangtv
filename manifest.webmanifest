@@ -1,0 +1,20 @@
+{
+  "name": "Ngai Vàng Tiếng Việt",
+  "short_name": "Ngai Vàng",
+  "description": "Luyện thi chữ ba vòng: Phản xạ, Xâu chuỗi, Soán ngôi. Đề mới mỗi ngày.",
+  "lang": "vi",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b0d2e",
+  "theme_color": "#0b0d2e",
+  "categories": ["education", "games"],
+  "icons": [
+    {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "icons/maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable"},
+    {"src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}

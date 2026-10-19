@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0d2e">
+<meta name="description" content="Luyện thi chữ ba vòng: Phản xạ, Xâu chuỗi, Soán ngôi. Đề mới mỗi ngày.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+</head>
+<body>
+<title>Ngai Vàng Tiếng Việt</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700&family=Paytone+One&display=swap&subset=vietnamese">
+<style>
+/* Layout: một cột kiểu màn hình trường quay, sân khấu tối có đèn quét, mọi thứ căn quanh bảng chữ ở giữa */
+:root{
+  color-scheme:dark;
+  --stage:#0b0d2e; --panel:#1c2266; --line:#373f96;
+  --ink:#f5f2ff; --muted:#a9acd9;
+  --gold:#f4c24f; --gold-hi:#fff1c4; --gold-deep:#b98422; --tile-ink:#2b1a00;
+  --good:#3fd6a2; --bad:#ff5d72;
+  --display:'Paytone One','Be Vietnam Pro',system-ui,sans-serif;
+  --body:'Be Vietnam Pro',system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+html,body{height:100%}
+body{background:var(--stage);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;overflow-x:hidden}
+.stage{position:fixed;inset:0;pointer-events:none;overflow:hidden;
+  background:radial-gradient(ellipse 90% 45% at 50% 108%, rgba(244,194,79,.22), transparent 70%),radial-gradient(ellipse 70% 40% at 50% -8%, #2b338f, transparent 72%),var(--stage)}
+.beam{position:absolute;top:-15%;width:46vmax;height:140vh;transform-origin:50% 0;background:linear-gradient(to bottom, rgba(255,236,190,.17), rgba(255,236,190,0) 72%);clip-path:polygon(46% 0,54% 0,100% 100%,0 100%);filter:blur(4px)}
+.beam.l{left:-14vmax;animation:sweepL 9s ease-in-out infinite alternate}
+.beam.r{right:-14vmax;animation:sweepR 12s ease-in-out infinite alternate}
+@keyframes sweepL{from{transform:rotate(-28deg)}to{transform:rotate(6deg)}}
+@keyframes sweepR{from{transform:rotate(28deg)}to{transform:rotate(-6deg)}}
+.floor{position:absolute;left:0;right:0;bottom:0;height:22vh;background:repeating-linear-gradient(90deg, rgba(244,194,79,.07) 0 2px, transparent 2px 46px);mask-image:linear-gradient(to top,#000,transparent);-webkit-mask-image:linear-gradient(to top,#000,transparent)}
+@media (prefers-reduced-motion:reduce){.beam{animation:none}*{transition:none!important}}
+
+main{position:relative;max-width:500px;margin:0 auto;padding-inline:16px;padding-block:18px 80px;box-sizing:border-box;min-height:100%}
+section{display:flex;flex-direction:column;gap:18px}
+h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;line-height:1.15}
+p{margin:0}
+.eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:700}
+.muted{color:var(--muted)}
+.demo-tag{align-self:flex-start;font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:3px 10px}
+
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible,input:focus-visible{outline:3px solid var(--gold-hi);outline-offset:2px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:52px;padding:0 22px;border-radius:14px;font-weight:700;font-size:17px}
+.btn.gold{background:linear-gradient(180deg,var(--gold-hi),var(--gold) 45%,var(--gold-deep));color:var(--tile-ink);box-shadow:0 4px 0 #7a5410,0 10px 30px rgba(244,194,79,.25)}
+.btn.gold:active{transform:translateY(3px);box-shadow:0 1px 0 #7a5410}
+.btn.line{border:1.5px solid var(--line);background:rgba(28,34,102,.6)}
+.btn.small{min-height:42px;font-size:15px;padding:0 14px;border-radius:12px}
+.btn[disabled]{opacity:.4;cursor:default}
+
+.logo{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding-block:22px 4px}
+.crown{width:84px;height:60px}
+.logo h1{font-size:clamp(34px,10vw,46px);color:var(--gold);text-shadow:0 3px 0 #6b4a0c,0 0 34px rgba(244,194,79,.45)}
+.logo p{color:var(--muted);max-width:32ch}
+.rounds{display:grid;gap:10px;margin:0;padding:0;list-style:none}
+.rounds li{display:grid;grid-template-columns:44px 1fr;gap:12px;align-items:start;padding:14px;border-radius:14px;background:rgba(28,34,102,.72);border:1px solid var(--line)}
+.rounds .num{font-family:var(--display);font-size:26px;color:var(--gold);text-align:center;line-height:1.1}
+.rounds b{display:block;font-size:17px}
+.rounds span{color:var(--muted);font-size:14px}
+.cta{display:flex;flex-direction:column;gap:10px}
+.topics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-height:236px;overflow-y:auto;padding:2px}
+.topic{padding:12px 6px;border-radius:14px;border:1.5px solid var(--line);background:rgba(28,34,102,.6);text-align:center}
+.topic b{display:block;font-family:var(--display);font-weight:400;font-size:24px;color:var(--ink)}
+.topic span{font-size:12px;color:var(--muted)}
+.topic[aria-pressed="true"]{border-color:var(--gold);background:rgba(244,194,79,.14)}
+.topic[aria-pressed="true"] b{color:var(--gold)}
+
+.hud{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;position:sticky;top:env(safe-area-inset-top,0px);z-index:3;padding-block:8px;background:linear-gradient(var(--stage) 70%,transparent)}
+.hud .rname{font-family:var(--display);font-size:20px;color:var(--gold)}
+.hud .meta{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums}
+.hud .meta b{color:var(--ink)}
+.ring{position:relative;width:62px;height:62px}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:6}
+.ring .bg{stroke:var(--panel)}
+.ring .fg{stroke:var(--gold);stroke-linecap:round;transition:stroke-dashoffset .1s linear}
+.ring.hot .fg{stroke:var(--bad)}
+.ring .sec{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--display);font-size:22px;font-variant-numeric:tabular-nums}
+.ring.hot .sec{color:var(--bad)}
+
+.card{background:linear-gradient(180deg,rgba(35,42,120,.92),rgba(22,27,82,.92));border:1px solid var(--line);border-radius:18px;padding:18px 16px;display:flex;flex-direction:column;gap:16px;box-shadow:0 20px 50px rgba(0,0,0,.35)}
+.qtype{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.qtext{font-size:20px;font-weight:700;white-space:pre-line;text-wrap:balance}
+.qtext.big{font-family:var(--display);font-weight:400;font-size:26px;letter-spacing:.04em;color:var(--gold-hi)}
+.passage{font-size:16px;line-height:1.65;padding:12px 14px;border-left:3px solid var(--gold);background:rgba(11,13,46,.5);border-radius:0 12px 12px 0}
+
+.slots{display:flex;flex-wrap:wrap;gap:12px 18px;justify-content:center}
+.group{display:flex;gap:5px}
+.slot{width:36px;height:44px;border-radius:9px;border:2px dashed var(--line);display:grid;place-items:center;font-weight:700;font-size:21px;background:rgba(11,13,46,.55)}
+.slot.f{border-style:solid;border-color:var(--gold);color:var(--gold-hi)}
+.slot.k{background:rgba(63,214,162,.16);border-color:var(--good);color:var(--good)}
+.slots.word{gap:8px}
+.slots.word .group{flex-wrap:wrap;justify-content:center;gap:8px;max-width:100%}
+.slots.word .slot{width:auto;min-width:46px;padding:0 9px;font-size:16px;height:40px}
+.tiles{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.tile{min-width:42px;height:46px;padding:0 8px;border-radius:10px;font-weight:700;font-size:21px;color:var(--tile-ink);background:linear-gradient(180deg,var(--gold-hi),var(--gold) 55%,#e1a93a);box-shadow:0 3px 0 #8a6113}
+.tiles.word .tile{font-size:16px;padding:0 11px;height:42px}
+.tile:active{transform:translateY(2px);box-shadow:0 1px 0 #8a6113}
+.tile[disabled]{opacity:.18;box-shadow:none;cursor:default}
+.tools{display:flex;gap:8px;justify-content:center}
+.shake{animation:shake .38s}
+@keyframes shake{20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}
+.flash-good{animation:fg .5s}
+@keyframes fg{from{box-shadow:0 0 0 3px var(--good),0 0 40px rgba(63,214,162,.5)}}
+
+.nums{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.opt{min-height:52px;border-radius:14px;border:1.5px solid var(--line);background:rgba(11,13,46,.5);font-size:22px;font-weight:700;font-family:var(--display)}
+.opt.ok{border-color:var(--good);background:rgba(63,214,162,.18);color:var(--good)}
+.opt.no{border-color:var(--bad);background:rgba(255,93,114,.15);color:var(--bad)}
+.opt.gone{opacity:.2}
+
+.actions{display:flex;gap:10px}
+.actions .btn{flex:1}
+.hintbtn svg{width:18px;height:18px;flex:none}
+
+.pattern{display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:center}
+.pattern .slot{width:28px;height:36px;font-size:17px}
+.answer{display:flex;gap:8px}
+.answer input{flex:1;min-width:0;min-height:52px;border-radius:14px;border:1.5px solid var(--line);background:rgba(11,13,46,.7);color:var(--ink);font:inherit;font-size:19px;font-weight:700;padding:0 14px}
+.reveal{text-align:center;font-size:15px;color:var(--muted)}
+.reveal b{color:var(--gold-hi);font-size:18px}
+
+.row1{display:flex;gap:4px;justify-content:center}
+.row1 .c{flex:1 1 0;min-width:0;max-width:40px;height:44px;border-radius:7px;display:grid;place-items:center;font-weight:700;font-size:19px;background:#e9e4ff;color:#1a1d4d;box-shadow:inset 0 -3px 0 rgba(0,0,0,.18)}
+.row1 .c.hid{color:transparent}
+.row1 .c.rv{background:var(--gold)}
+.def{font-size:17px;font-weight:500}
+.ladder{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.ladder div{min-width:0}
+.ladder div{display:flex;flex-direction:column;align-items:center;padding:6px 2px;border-radius:10px;border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.ladder span{font-size:11px;color:var(--muted)}
+.ladder b{font-family:var(--display);font-weight:400;font-size:18px}
+.ladder .now{border-color:var(--gold);background:rgba(244,194,79,.14)}
+.ladder .now b{color:var(--gold)}
+.ladder .done{border-color:var(--good);background:rgba(63,214,162,.12)}
+.ladder .done b{color:var(--good)}
+/* ô chữ */
+.xw-wrap{overflow-x:auto;padding-block:4px}
+.xw{display:grid;gap:4px;justify-content:center;margin:0 auto}
+.xw .rn{width:24px;display:grid;place-items:center;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.xw .rn.cur{color:var(--gold);font-weight:700}
+.xw .c{width:34px;height:38px;border-radius:7px;display:grid;place-items:center;font-weight:700;font-size:18px;background:#e9e4ff;color:#1a1d4d;box-shadow:inset 0 -3px 0 rgba(0,0,0,.18)}
+.xw .c.hid{color:transparent}
+.xw .c.kc{background:var(--gold);box-shadow:inset 0 -3px 0 var(--gold-deep)}
+.xw .c.cur{outline:2px solid var(--gold-hi);outline-offset:1px}
+.xw .c.ok{background:#c7f4e3}
+.xw .c.kc.ok{background:var(--gold)}
+.xw .c.miss{background:#5a5f99;box-shadow:none}
+.xw .c.miss.kc{background:#8f7a3e}
+.xw .c.given:not(.hid){color:#5b3fbf}
+.xw .e{width:34px;height:38px}
+.xw.done .c{color:#1a1d4d}
+.clue{display:flex;flex-direction:column;gap:8px}
+.clue .def{font-size:17px;font-weight:500}
+.mode{display:flex;gap:8px;flex-wrap:wrap}
+
+.board{display:grid;gap:8px}
+.prow{display:grid;grid-template-columns:28px 1fr auto auto;gap:10px;align-items:center;padding:12px 14px;border-radius:14px;background:rgba(28,34,102,.72);border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.prow.me{border-color:var(--gold)}
+.prow .rk{font-family:var(--display);color:var(--muted)}
+.prow .pts{font-family:var(--display);font-size:20px}
+.pill{font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;letter-spacing:.03em}
+.pill.go{background:rgba(63,214,162,.16);color:var(--good)}
+.pill.out{background:rgba(255,93,114,.15);color:var(--bad)}
+.vs{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;text-align:center}
+.vs .who{padding:16px 8px;border-radius:16px;background:rgba(28,34,102,.72);border:1px solid var(--line)}
+.vs .who b{display:block;font-size:17px}
+.vs .who span{font-size:13px;color:var(--muted)}
+.vs .x{font-family:var(--display);color:var(--gold);font-size:22px}
+.rules{margin:0;padding-left:20px;display:grid;gap:6px}
+.big{font-size:clamp(28px,8vw,38px);color:var(--gold);text-align:center}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.stats div{padding:12px 6px;border-radius:14px;background:rgba(28,34,102,.72);border:1px solid var(--line)}
+.stats b{display:block;font-family:var(--display);font-size:24px;color:var(--gold)}
+.stats span{font-size:12px;color:var(--muted)}
+.today{display:grid;gap:10px;padding:18px;border-radius:20px;background:linear-gradient(160deg,rgba(244,194,79,.2),rgba(28,34,102,.85) 60%);border:1.5px solid var(--gold);box-shadow:0 12px 40px rgba(244,194,79,.12)}
+.today .tdate{font-family:var(--display);font-size:clamp(20px,5.6vw,26px);line-height:1.2}
+.today .tline{font-size:14px;color:var(--muted)}
+.today .tstat{display:flex;gap:8px;flex-wrap:wrap}
+.today .tstat span{font-size:13px;font-weight:700;padding:5px 10px;border-radius:999px;background:rgba(5,6,22,.35);border:1px solid var(--line)}
+.today .tstat .done{color:var(--good);border-color:rgba(63,214,162,.5)}
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;text-align:center;font-size:11px;color:var(--muted)}
+.week i{display:block;margin:4px auto 0;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line);font-style:normal;line-height:19px;font-size:12px}
+.week i.on{background:var(--gold);border-color:var(--gold);color:#1d1d2b;font-weight:800}
+.week i.now{border-color:var(--gold)}
+.topic .new{display:inline-block;margin-left:6px;font-size:10px;font-weight:800;padding:1px 6px;border-radius:999px;background:var(--gold);color:#1d1d2b;vertical-align:middle}
+.note{font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px}
+
+[hidden]{display:none!important}
+.overlay{position:fixed;inset:0;z-index:20;background:rgba(5,6,22,.86);display:grid;place-items:center;padding:16px}
+.ad{width:min(420px,100%);border-radius:20px;overflow:hidden;background:#f6f4ee;color:#1d1d2b;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.ad .top{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;font-size:13px;background:#e9e6dc}
+.ad .body{padding:28px 20px;display:flex;flex-direction:column;gap:12px;text-align:center;align-items:center}
+.ad .ph{width:100%;aspect-ratio:16/9;max-width:100%;border-radius:12px;display:grid;place-items:center;background:repeating-linear-gradient(45deg,#dcd8cb 0 12px,#e8e5da 12px 24px);color:#6b6858;font-weight:700}
+.ad .row{display:flex;gap:8px;width:100%}
+.ad .row .btn{flex:1}
+.ad .skip{border:1.5px solid #c9c5b6;color:#1d1d2b}
+.sound{position:fixed;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:10;width:46px;height:46px;border-radius:50%;background:var(--panel);border:1px solid var(--line);display:grid;place-items:center}
+.sound svg{width:22px;height:22px}
+</style>
+
+<div class="stage" aria-hidden="true"><div class="beam l"></div><div class="beam r"></div><div class="floor"></div></div>
+
+<main>
+  <section id="home">
+    <div class="logo">
+      <svg class="crown" viewBox="0 0 84 60" aria-hidden="true"><defs><linearGradient id="cg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff1c4"/><stop offset=".55" stop-color="#f4c24f"/><stop offset="1" stop-color="#b98422"/></linearGradient></defs><path d="M6 50 L2 14 L24 32 L42 4 L60 32 L82 14 L78 50 Z" fill="url(#cg)" stroke="#6b4a0c" stroke-width="2.5" stroke-linejoin="round"/><rect x="6" y="50" width="72" height="8" rx="2" fill="url(#cg)" stroke="#6b4a0c" stroke-width="2.5"/><circle cx="42" cy="38" r="5" fill="#ff5d72"/></svg>
+      <h1>Ngai Vàng Tiếng Việt</h1>
+      <p>Ba vòng thi chữ. Ai đủ phản xạ, đủ vốn từ thì bước lên ngai vàng.</p>
+    </div>
+    <div class="today" id="today"></div>
+    <div class="eyebrow">Hoặc chọn một số phát sóng</div>
+    <div class="topics" id="topics"></div>
+    <ul class="rounds">
+      <li><div class="num">1</div><div><b>Phản xạ</b><span>15 câu trong 90 giây: sắp chữ, điền ca dao, sửa chính tả, đếm lỗi.</span></div></li>
+      <li><div class="num">2</div><div><b>Xâu chuỗi</b><span>9 chuỗi mỗi lượt: câu thơ, ca dao, tục ngữ. Chuỗi dài dần, 30 giây mỗi chuỗi.</span></div></li>
+      <li><div class="num">3</div><div><b>Soán ngôi</b><span>8 ô chữ: hai ô 3, hai ô 5, hai ô 7, hai ô 9 chữ cái, gợi ý bằng lời giải nghĩa.</span></div></li>
+    </ul>
+    <div class="cta">
+      <button class="btn line" id="startBtn">Chơi mục đã chọn</button>
+      <p class="muted" style="font-size:14px;text-align:center">Kẹt câu nào thì xem quảng cáo (mô phỏng 5 giây) để mở gợi ý.</p>
+    </div>
+  </section>
+
+  <section id="intro" hidden></section>
+
+  <section id="play" hidden>
+    <div class="hud">
+      <div>
+        <div class="rname" id="hudName">Vòng 1</div>
+        <div class="meta"><span id="hudQ">Câu 1</span><span>Điểm <b id="hudScore">0</b></span></div>
+      </div>
+      <div class="ring" id="ring"><svg viewBox="0 0 62 62"><circle class="bg" cx="31" cy="31" r="27"/><circle class="fg" id="ringFg" cx="31" cy="31" r="27"/></svg><div class="sec" id="ringSec">90</div></div>
+    </div>
+    <div class="card" id="qcard"></div>
+    <div class="actions">
+      <button class="btn line small hintbtn" id="hintBtn"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M10 9 L15 12 L10 15 Z" fill="currentColor"/></svg>Gợi ý</button>
+      <button class="btn line small" id="skipBtn">Bỏ qua</button>
+    </div>
+  </section>
+
+  <section id="result" hidden></section>
+  <section id="final" hidden></section>
+</main>
+
+<div class="overlay" id="ad" hidden>
+  <div class="ad" role="dialog" aria-modal="true" aria-label="Quảng cáo mô phỏng">
+    <div class="top"><span>Quảng cáo · mô phỏng</span><span id="adCount">5</span></div>
+    <div class="body">
+      <div class="ph">Vị trí quảng cáo có thưởng</div>
+      <p style="font-size:14px">Trên app thật, đây là video quảng cáo. Xem hết để nhận gợi ý. Đồng hồ đang tạm dừng.</p>
+      <div class="row">
+        <button class="btn small skip" id="adCancel">Thôi, tự làm</button>
+        <button class="btn small gold" id="adOk" disabled>Nhận gợi ý</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<button class="sound" id="soundBtn" aria-label="Tắt âm thanh"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path id="sw" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+
+
+<script>
+// Tải đề mới nhất; mất mạng thì dùng bản đã lưu trên máy
+(async () => {
+  let d = null;
+  try { const r = await fetch('data.json', {cache: 'no-cache'}); if (r.ok) d = await r.json(); } catch (e) {}
+  if (!d) { try { d = JSON.parse(localStorage.getItem('nvtv_data') || 'null'); } catch (e) {} }
+  if (!d) { document.getElementById('today').innerHTML = '<p>Lần đầu mở app cần có mạng để tải đề. Hãy bật mạng rồi mở lại.</p>'; return; }
+  try { localStorage.setItem('nvtv_data', JSON.stringify(d)); } catch (e) {}
+  window.__DATA = d;
+  const s = document.createElement('script'); s.src = 'app.js'; document.body.appendChild(s);
+})();
+if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+</script>
+</body>
+</html>
