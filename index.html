@@ -265,6 +265,21 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--gold-hi);outlin
 <button class="sound" id="soundBtn" aria-label="Tắt âm thanh"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path id="sw" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
 
 
+<div id="installBox" hidden style="position:fixed;left:12px;right:70px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:15;display:flex;gap:8px;align-items:center;padding:10px 12px;border-radius:14px;background:#1c2266;border:1px solid #f4c24f;box-shadow:0 10px 30px rgba(0,0,0,.5);max-width:440px;margin:0 auto">
+  <span style="flex:1;font-size:14px">Cài <b>Ngai Vàng</b> lên máy để mở nhanh như app</span>
+  <button id="installBtn" class="btn gold small" style="min-height:40px">Cài app</button>
+  <button id="installX" aria-label="Đóng" style="font-size:20px;padding:0 6px">×</button>
+</div>
+<script>
+// Nút "Cài app": hiện khi trình duyệt cho phép cài
+let _ip = null;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); _ip = e;
+  try { if (localStorage.getItem('nvtv_noinstall')) return; } catch (x) {}
+  document.getElementById('installBox').hidden = false; });
+document.getElementById('installBtn').onclick = async () => { if (!_ip) return; _ip.prompt(); await _ip.userChoice; _ip = null; document.getElementById('installBox').hidden = true; };
+document.getElementById('installX').onclick = () => { document.getElementById('installBox').hidden = true; try { localStorage.setItem('nvtv_noinstall', '1'); } catch (x) {} };
+window.addEventListener('appinstalled', () => { document.getElementById('installBox').hidden = true; });
+</script>
 <script>
 // Tải đề mới nhất; mất mạng thì dùng bản đã lưu trên máy
 (async () => {
