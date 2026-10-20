@@ -282,10 +282,34 @@ window.addEventListener('appinstalled', () => { document.getElementById('install
 </script>
 <script>
 // Tải đề mới nhất; mất mạng thì dùng bản đã lưu trên máy
+// Đề mới hằng ngày được ghi thêm vào Google Sheet (tab "de": cột A = khóa soNN, B = bộ đề JSON, C = nguồn thơ JSON)
+const SHEET = '1HYJPLB4xRcq4pTD7PJJZ4Vm_xm8j2dtYBYFJL7NiWkU';
+function sheetRows() {   // đọc bằng JSONP của Google Visualization (không vướng CORS)
+  return new Promise((ok, fail) => {
+    const cb = '__nvtvSheet' + Date.now(), sc = document.createElement('script');
+    const done = (f, v) => { clearTimeout(t); delete window[cb]; sc.remove(); f(v); };
+    const t = setTimeout(() => done(fail, new Error('timeout')), 8000);
+    window[cb] = j => { try { done(ok, (j.table.rows || []).map(x => (x.c || []).map(c => (c && c.v != null) ? String(c.v) : ''))); } catch (e) { done(fail, e); } };
+    sc.onerror = () => done(fail, new Error('load'));
+    sc.src = `https://docs.google.com/spreadsheets/d/${SHEET}/gviz/tq?tqx=out:json;responseHandler:${cb}&headers=0&sheet=de&tq=${encodeURIComponent('select A,B,C')}&_=${Date.now()}`;
+    document.head.appendChild(sc);
+  });
+}
+function mergeSheet(d, rows) {
+  const add = {}, src = Object.assign({}, d._src || {});
+  for (const [k, b, c] of rows) {
+    if (!/^so\d+$/.test(k) || d[k]) continue;
+    try { add[k] = JSON.parse(b); if (c) Object.assign(src, JSON.parse(c)); } catch (e) {}
+  }
+  const out = {};
+  Object.keys(add).sort((a, b) => b.slice(2) - a.slice(2)).forEach(k => out[k] = add[k]);
+  Object.assign(out, d); out._src = src; return out;
+}
 (async () => {
   let d = null;
   try { const r = await fetch('data.json', {cache: 'no-cache'}); if (r.ok) d = await r.json(); } catch (e) {}
   if (!d) { try { d = JSON.parse(localStorage.getItem('nvtv_data') || 'null'); } catch (e) {} }
+  if (d) { try { d = mergeSheet(d, await sheetRows()); } catch (e) {} }
   if (!d) { document.getElementById('today').innerHTML = '<p>Lần đầu mở app cần có mạng để tải đề. Hãy bật mạng rồi mở lại.</p>'; return; }
   try { localStorage.setItem('nvtv_data', JSON.stringify(d)); } catch (e) {}
   window.__DATA = d;
