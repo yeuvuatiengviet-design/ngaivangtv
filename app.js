@@ -80,7 +80,7 @@ function pickFresh(pool,n,key){
   old.sort((a,b)=>SEEN.indexOf(key(a))-SEEN.indexOf(key(b)));
   return fresh.concat(old).slice(0,n);
 }
-const R1Q={sap:6,dien:4,sua:2,hoan:2,loi:1}, NR1=15, NR2=9, NR2P=3;  // 15 câu phản xạ; 9 chuỗi, trong đó 3 câu thơ
+const R1Q={sap:6,dien:4,sua:2,hoan:2,thieu:1}, NR1=15, NR2=9, NR2P=3;  // 15 câu phản xạ; 9 chuỗi, trong đó 3 câu thơ
 // Bốc 15 câu Phản xạ đúng tỉ lệ dạng câu, ưu tiên câu chưa gặp; thiếu dạng nào thì bù bằng câu khác
 function pickR1(pool){
   let out=Object.entries(R1Q).flatMap(([t,n])=>pickFresh(pool.filter(q=>q.t===t),n,kR1));
@@ -229,7 +229,7 @@ function typed(box, ans, onOk, placeholder='Gõ đáp án có dấu'){
 function nBoards(){ return G.T.boards.length; }
 function need(){ return Math.floor(nBoards()/2)+1; }
 const ROUNDS = {
-  1:{name:'Phản xạ', rules:()=>['15 câu, 90 giây cho cả vòng.','Sắp chữ cái thành từ, điền từ vào ca dao tục ngữ, viết lại cho đúng, hoàn thiện cụm từ, đếm lỗi chính tả.','Mỗi câu đúng 10 điểm. Câu khó có thể bỏ qua.','Hết vòng, người thấp điểm nhất bị loại.']},
+  1:{name:'Phản xạ', rules:()=>['15 câu, 90 giây cho cả vòng.','Sắp chữ cái thành từ, điền từ vào ca dao tục ngữ, viết lại cho đúng, hoàn thiện cụm từ, điền chữ cái còn thiếu trong đoạn văn.','Mỗi câu đúng 10 điểm. Câu khó có thể bỏ qua.','Hết vòng, người thấp điểm nhất bị loại.']},
   2:{name:'Xâu chuỗi', rules:()=>['9 chuỗi từ (có câu thơ của các tác phẩm nổi tiếng), dài dần, mỗi chuỗi 30 giây.','Chạm các từ theo đúng thứ tự để thành câu. Từ viết hoa là từ mở đầu.','Mỗi chuỗi đúng 20 điểm.','Chỉ người dẫn đầu tổng điểm được vào vòng Soán ngôi.']},
   3:{name:'Soán ngôi', rules:()=>['8 ô chữ khó dần: hai ô 3 chữ cái, hai ô 5, hai ô 7, hai ô 9. Gợi ý là lời giải nghĩa của từ.','Mỗi ô chữ 30 giây. Chữ cái đầu tiên mở sẵn; sau 15 giây mở thêm một ô bất kỳ.','Mỗi câu đúng nhân đôi mốc điểm: 5, 10, 20, 40, 80, 160, 320, 640. Sau mỗi câu đúng có thể dừng để giữ điểm.','Hết giờ mà chưa đúng là mất hết điểm đang giữ ở vòng này. Đúng cả 8 câu thì soán ngôi.']}
 };
@@ -248,7 +248,7 @@ function intro(n){
 }
 
 /* ===== VÒNG 1: PHẢN XẠ ===== */
-const R1LBL = {sap:'Sắp xếp thành từ có nghĩa', dien:'Điền từ còn thiếu', sua:'Viết lại cho đúng chính tả', hoan:'Hoàn thiện cụm từ', loi:'Có bao nhiêu lỗi chính tả?'};
+const R1LBL = {sap:'Sắp xếp thành từ có nghĩa', dien:'Điền từ còn thiếu', sua:'Viết lại cho đúng chính tả', hoan:'Hoàn thiện cụm từ', loi:'Có bao nhiêu lỗi chính tả?', thieu:'Điền chữ cái còn thiếu'};
 function startR1(){
   $('#skipBtn').textContent='Bỏ qua';
   const tok=++G.tok, qs=shuffle(pickR1(G.T.r1)); let i=0; markSeen(qs.map(kR1));
@@ -260,9 +260,30 @@ function startR1(){
     const box=$('#qcard'); box.className='card';
     box.innerHTML=`<div class="qtype">${R1LBL[q.t]}</div>`;
     if(q.t==='sap'){
-      const words=q.a.split(' ');
-      const ctl=arrange(box, chars(q.a.replace(/ /g,'')), words.map(w=>chars(w).length), 'char', ()=>go(true));
-      cur={hint:()=>ctl.hint(), skip:()=>{ ctl.reveal(); go(false); }};
+      // Giống màn hình phát sóng: các chữ cái xáo trộn, cách nhau bằng " / "; gõ từ có nghĩa
+      const L=chars(q.a.replace(/ /g,'')), o=L.map((_,k)=>k); let n=0;
+      if(L.length>1) do{ shuffle(o); n++; }while(o.every((v,k)=>L[v]===L[k]) && n<30);
+      box.insertAdjacentHTML('beforeend', `<div class="tv"><div class="tv-q sap">${o.map(k=>esc(L[k])).join(' / ')}</div></div>`);
+      const ctl=typed(box, q.a, ()=>go(true), 'Gõ từ có nghĩa');
+      cur={hint:()=>ctl.hint(), skip:()=>{ if(ctl.done) return; ctl.reveal(); go(false); }};
+    } else if(q.t==='thieu'){
+      // Đoạn văn khuyết chữ cái (phụ âm hoặc nguyên âm), gõ lần lượt các chữ còn thiếu
+      const parts=q.q.split(/\[(.)\]/), miss=parts.filter((_,k)=>k%2), shown=new Set(); let done=false;
+      const drawT=all=>parts.map((p,k)=>{ if(!(k%2)) return esc(p); const j=(k-1)/2;
+        return shown.has(j)?`<b class="gap hv">${esc(p)}</b>`:all?`<b class="gap rv">${esc(p)}</b>`:'<b class="gap">_</b>'; }).join('');
+      box.insertAdjacentHTML('beforeend', `<div class="tv"><div class="tv-q txt">Chữ cái nào còn thiếu trong đoạn trích sau: “<span class="psg"></span>”</div></div>
+        <p class="muted" style="font-size:13px">Gõ lần lượt ${miss.length} chữ cái còn thiếu, cách nhau bằng dấu cách (ví dụ: k x y).</p>
+        <form class="answer" autocomplete="off"><input aria-label="Các chữ cái còn thiếu" placeholder="Các chữ còn thiếu" enterkeyhint="send" autocapitalize="off" spellcheck="false"><button class="btn gold small" type="submit">Trả lời</button></form>`);
+      const psg=box.querySelector('.psg'), form=box.querySelector('form'), inp=form.querySelector('input');
+      const norm=s=>s.normalize('NFC').toLocaleLowerCase('vi').replace(/[^\p{L}]/gu,'');
+      const target=norm(miss.join('')); psg.innerHTML=drawT();
+      form.onsubmit=e=>{ e.preventDefault(); if(done) return;
+        if(norm(inp.value)===target){ done=true; sfx.good(); box.classList.add('flash-good'); psg.innerHTML=drawT(true); go(true); }
+        else { sfx.bad(); form.classList.add('shake'); setTimeout(()=>form.classList.remove('shake'),400); inp.select(); } };
+      setTimeout(()=>inp.focus({preventScroll:true}),60);
+      cur={hint:()=>{ if(done) return; const j=miss.findIndex((_,x)=>!shown.has(x)); if(j>=0 && shown.size<miss.length-1){ shown.add(j); psg.innerHTML=drawT(); sfx.whoosh(); } },
+        skip:()=>{ if(done) return; done=true; psg.innerHTML=drawT(true);
+          box.insertAdjacentHTML('beforeend', `<p class="reveal">Các chữ còn thiếu: <b>${esc(miss.join(' '))}</b></p>`); go(false); }};
     } else if(q.t==='loi'){
       let done=false; const ok=q.a;
       box.insertAdjacentHTML('beforeend', `<div class="passage">${esc(q.q)}</div><div class="nums">${[0,1,2,3,4,5].map(n=>`<button class="opt" data-n="${n}">${n}</button>`).join('')}</div>`);

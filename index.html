@@ -191,6 +191,15 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--gold-hi);outlin
 .topic .new{display:inline-block;margin-left:6px;font-size:10px;font-weight:800;padding:1px 6px;border-radius:999px;background:var(--gold);color:#1d1d2b;vertical-align:middle}
 .note{font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px}
 
+/* khung câu hỏi kiểu màn hình phát sóng */
+.tv{position:relative;margin:4px 14px 14px 0}
+.tv::after{content:"";position:absolute;left:22%;right:-14px;top:16px;bottom:-14px;background:#2fe0a8;border-radius:12px;z-index:0}
+.tv-q{position:relative;z-index:1;background:#35c8f5;color:#0b1030;border-radius:12px;padding:18px 14px;font-weight:600}
+.tv-q.sap{text-align:center;font-size:clamp(20px,6.4vw,27px);letter-spacing:.05em;font-weight:500;word-spacing:.08em}
+.tv-q.txt{font-size:16px;line-height:1.6;text-align:center}
+.tv .gap{font-weight:800;color:#0b1030;padding:0 1px}
+.tv .gap.rv{color:#0a7a50}
+.tv .gap.hv{color:#6a3fd0}
 [hidden]{display:none!important}
 .overlay{position:fixed;inset:0;z-index:20;background:rgba(5,6,22,.86);display:grid;place-items:center;padding:16px}
 .ad{width:min(420px,100%);border-radius:20px;overflow:hidden;background:#f6f4ee;color:#1d1d2b;box-shadow:0 30px 80px rgba(0,0,0,.6)}
@@ -217,7 +226,7 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--gold-hi);outlin
     <div class="eyebrow">Hoặc chọn một số phát sóng</div>
     <div class="topics" id="topics"></div>
     <ul class="rounds">
-      <li><div class="num">1</div><div><b>Phản xạ</b><span>15 câu trong 90 giây: sắp chữ, điền ca dao, sửa chính tả, đếm lỗi.</span></div></li>
+      <li><div class="num">1</div><div><b>Phản xạ</b><span>15 câu trong 90 giây: sắp chữ, điền ca dao, sửa chính tả, điền chữ cái còn thiếu trong đoạn văn.</span></div></li>
       <li><div class="num">2</div><div><b>Xâu chuỗi</b><span>9 chuỗi mỗi lượt: câu thơ, ca dao, tục ngữ. Chuỗi dài dần, 30 giây mỗi chuỗi.</span></div></li>
       <li><div class="num">3</div><div><b>Soán ngôi</b><span>8 ô chữ: hai ô 3, hai ô 5, hai ô 7, hai ô 9 chữ cái, gợi ý bằng lời giải nghĩa.</span></div></li>
     </ul>
