@@ -1,5 +1,5 @@
 // Ngai Vàng Tiếng Việt: dùng được khi mất mạng; có mạng thì luôn lấy đề mới nhất.
-const CACHE = 'nvtv-v6';
+const CACHE = 'nvtv-v7';
 const CORE = ['./', 'index.html', 'app.js', 'data.json', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => {
