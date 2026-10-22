@@ -135,8 +135,58 @@ function renderToday(){
     <div class="tline">15 câu phản xạ, 9 chuỗi, 8 ô chữ Soán ngôi, lấy từ ${TOPICS.length} bộ đề. Sang ngày mới tự đổi đề, không lặp câu cho tới khi đi hết kho ${POOL.r1.length} câu.</div>
     <div class="tstat"><span>Chuỗi ${st} ngày liên tiếp</span>${done?`<span class="done">Hôm nay đã luyện · cao nhất ${L[k]} điểm</span>`:'<span>Hôm nay chưa luyện</span>'}</div>
     <div class="week" aria-label="7 ngày gần nhất">${week}</div>
-    <button class="btn gold" id="dailyBtn">${done?'Luyện lại đề hôm nay':'Luyện đề hôm nay'}</button>`;
+    <button class="btn gold" id="dailyBtn">${done?'Luyện lại đề hôm nay':'Luyện đề hôm nay'}</button>
+    <div class="mockline"><div><b>Thi thử sơ tuyển</b><span>50 câu phản xạ · 15 phút · đạt từ 25 câu${mockBest()!=null?` · cao nhất ${mockBest()}/50`:''}</span></div>
+    <button class="btn line small" id="mockBtn">Thi thử</button></div>`;
   $('#dailyBtn').onclick=()=>begin(dailySet());
+  $('#mockBtn').onclick=mockIntro;
+}
+/* ===== THI THỬ SƠ TUYỂN: 50 câu phản xạ trong 15 phút, đạt từ 25 câu ===== */
+const MOCK_N=50, MOCK_SECS=900, MOCK_PASS=25, MOCKK='nvtv_mock_v1';
+function mockHist(){ try{ return JSON.parse(localStorage.getItem(MOCKK)||'[]')||[]; }catch(e){ return []; } }
+function mockBest(){ const h=mockHist(); return h.length?Math.max(...h.map(x=>x.s)):null; }
+function mockSet(){
+  const q=Object.fromEntries(Object.entries(R1Q).map(([t,n])=>[t,Math.round(n*MOCK_N/NR1)]));
+  let out=Object.entries(q).flatMap(([t,n])=>pickFresh(POOL.r1.filter(x=>x.t===t),n,kR1));
+  if(out.length<MOCK_N){ const has=new Set(out); out=out.concat(pickFresh(POOL.r1.filter(x=>!has.has(x)),MOCK_N-out.length,kR1)); }
+  return shuffle(out.slice(0,MOCK_N));
+}
+function mockIntro(){
+  ac(); if(AUD.ctx&&AUD.ctx.state==='suspended') AUD.ctx.resume(); stopMusic();
+  const h=mockHist().slice(-5).reverse();
+  $('#intro').innerHTML=`<span class="eyebrow">Mô phỏng vòng sơ tuyển</span>
+    <h2 class="big">Thi thử 50 câu</h2>
+    <ul class="rules"><li>50 câu kiểu vòng Phản xạ, làm trong 15 phút (khoảng 18 giây mỗi câu).</li>
+      <li>Đúng từ 25 câu là đạt ngưỡng vào phỏng vấn. Nên nhắm từ 35 câu để chắc chắn.</li>
+      <li>Không có gợi ý. Câu khó thì bấm Bỏ qua, đừng sa lầy.</li>
+      <li>Hết giờ hoặc hết câu, app chấm điểm và liệt kê các câu sai để ôn lại.</li></ul>
+    ${h.length?`<div class="board">${h.map(x=>`<div class="prow"><span class="rk">·</span><span>${esc(x.d)}</span><span class="pill ${x.s>=MOCK_PASS?'go':'out'}">${x.s>=MOCK_PASS?'Đạt':'Chưa đạt'}</span><span class="pts">${x.s}</span></div>`).join('')}</div>`:''}
+    <button class="btn gold" id="goMock">Bắt đầu tính giờ</button>
+    <button class="btn line" id="backMock">Về trang chủ</button>`;
+  show('intro');
+  $('#backMock').onclick=goHome;
+  $('#goMock').onclick=()=>{ newGame({name:'Thi thử sơ tuyển',r1:[],r2:[],soan:[[]]}); G.mock={qs:mockSet(),secs:MOCK_SECS,res:[]}; show('play'); startR1(); };
+}
+function mockEnd(){
+  G.tok++; if(curTimer) curTimer.stop(); cur={hint:null,skip:null};
+  const M=G.mock, ok=M.res.filter(r=>r.ok).length, done=M.res.length, pass=ok>=MOCK_PASS;
+  const now=new Date(), d=`${pad(now.getDate())}/${pad(now.getMonth()+1)} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  try{ const h=mockHist(); h.push({d,s:ok}); localStorage.setItem(MOCKK, JSON.stringify(h.slice(-30))); }catch(e){}
+  pass ? sfx.fanfare() : sfx.lose();
+  const by={}; M.qs.forEach((q,k)=>{ const b=by[q.t]||(by[q.t]={n:0,ok:0}); b.n++; if(M.res[k]&&M.res[k].ok) b.ok++; });
+  const wrong=M.res.filter(r=>!r.ok).concat(M.qs.slice(done).map(q=>({q,ok:false,skip:true})));
+  const ansOf=q=>q.t==='thieu' ? (q.q.match(/\[(.)\]/g)||[]).map(x=>x[1]).join(' ') : q.a;
+  $('#final').innerHTML=`<div class="logo"><span class="eyebrow">Kết quả thi thử sơ tuyển</span>
+      <h2 class="big">${ok}/${MOCK_N} câu đúng</h2>
+      <p class="muted">${pass?(ok>=35?'Đạt ngưỡng, và đủ chắc để vào phỏng vấn.':'Đạt ngưỡng 25 câu. Cố lên mức 35 để chắc chắn hơn.'):`Chưa đạt, còn thiếu ${MOCK_PASS-ok} câu. Ôn các câu sai bên dưới rồi thi lại.`}</p></div>
+    <div class="stats"><div><b>${done}</b><span>Câu đã làm</span></div><div><b>${MOCK_N-done}</b><span>Chưa kịp làm</span></div><div><b>${mockBest()}</b><span>Cao nhất</span></div></div>
+    <div class="board">${Object.entries(by).map(([t,b])=>`<div class="prow"><span class="rk">·</span><span>${esc(R1LBL[t]||t)}</span><span></span><span class="pts">${b.ok}/${b.n}</span></div>`).join('')}</div>
+    ${wrong.length?`<span class="eyebrow">Câu sai và chưa làm (${wrong.length})</span>
+    <div class="board">${wrong.map(r=>`<div class="prow" style="grid-template-columns:1fr"><span><span class="muted" style="font-size:12px">${esc(R1LBL[r.q.t]||'')}${r.skip?' · chưa làm':''}</span><br>${r.q.q&&r.q.t!=='thieu'?esc(r.q.q)+' → ':''}<b style="color:var(--gold-hi)">${esc(ansOf(r.q))}</b></span></div>`).join('')}</div>`:''}
+    <button class="btn gold" id="mockAgain">Thi lại đề khác</button>
+    <button class="btn line" id="mockHome">Về trang chủ</button>`;
+  show('final');
+  $('#mockAgain').onclick=mockIntro; $('#mockHome').onclick=goHome;
 }
 function begin(T){ ac(); if(AUD.ctx&&AUD.ctx.state==='suspended') AUD.ctx.resume(); if(!AUD.music) startMusic(); newGame(T); intro(1); }
 function goHome(){ renderToday(); show('home'); }
@@ -167,7 +217,7 @@ function watchAd(cb){
   $('#adCancel').onclick=()=>close();
   function close(){ clearInterval(adIv); $('#ad').hidden=true; if(curTimer) curTimer.resume(); }
 }
-$('#hintBtn').onclick=()=>{ if(cur.hint){ G.ads++; sfx.whoosh(); cur.hint(); } };
+$('#hintBtn').onclick=()=>{ if(G&&G.mock) return; if(cur.hint){ G.ads++; sfx.whoosh(); cur.hint(); } };
 $('#skipBtn').onclick=()=>{ if(cur.skip){ sfx.tap(); cur.skip(); } };
 
 /* ===== THÀNH PHẦN: XẾP Ô (chữ cái & từ) ===== */
@@ -251,12 +301,13 @@ function intro(n){
 const R1LBL = {sap:'Sắp xếp thành từ có nghĩa', dien:'Điền từ còn thiếu', sua:'Viết lại cho đúng chính tả', hoan:'Hoàn thiện cụm từ', loi:'Có bao nhiêu lỗi chính tả?', thieu:'Điền chữ cái còn thiếu'};
 function startR1(){
   $('#skipBtn').textContent='Bỏ qua';
-  const tok=++G.tok, qs=shuffle(pickR1(G.T.r1)); let i=0; markSeen(qs.map(kR1));
-  curTimer=new Timer(90,null,()=>{ if(tok===G.tok) endRound(); });
-  function next(){ if(tok!==G.tok) return; if(i>=qs.length){ curTimer.stop(); endRound(); return; } render(qs[i]); }
-  const go = ok => { if(ok) addMe(10); i++; setTimeout(next, ok?450:1100); };
+  const M=G.mock, finish=()=>(M?mockEnd:endRound)();
+  const tok=++G.tok, qs=M ? M.qs : shuffle(pickR1(G.T.r1)); let i=0; markSeen(qs.map(kR1));
+  curTimer=new Timer(M?M.secs:90,null,()=>{ if(tok===G.tok) finish(); });
+  function next(){ if(tok!==G.tok) return; if(i>=qs.length){ curTimer.stop(); finish(); return; } render(qs[i]); }
+  const go = ok => { if(ok) addMe(10); if(M) M.res.push({q:qs[i],ok}); i++; setTimeout(next, ok?450:(M?700:1100)); };
   function render(q){
-    hud('Vòng 1 · Phản xạ', `Câu ${i+1}/${qs.length}`);
+    hud(M?'Thi thử sơ tuyển':'Vòng 1 · Phản xạ', `Câu ${i+1}/${qs.length}`);
     const box=$('#qcard'); box.className='card';
     box.innerHTML=`<div class="qtype">${R1LBL[q.t]}</div>`;
     if(q.t==='sap'){
