@@ -137,9 +137,14 @@ function renderToday(){
     <div class="week" aria-label="7 ngày gần nhất">${week}</div>
     <button class="btn gold" id="dailyBtn">${done?'Luyện lại đề hôm nay':'Luyện đề hôm nay'}</button>
     <div class="mockline"><div><b>Thi thử sơ tuyển</b><span>50 câu phản xạ · 10 phút · đạt từ 25 câu${mockBest()!=null?` · cao nhất ${mockBest()}/50`:''}</span></div>
-    <button class="btn line small" id="mockBtn">Thi thử</button></div>`;
+    <button class="btn line small" id="mockBtn">Thi thử</button></div>
+    <div class="mockline"><div><b>Luyện Hoàn thiện cụm từ</b><span>20 câu · 10 giây/câu${drillBest('hoan')!=null?` · cao nhất ${drillBest('hoan')}%`:''}</span></div>
+    <button class="btn line small" id="drHoan">Luyện</button></div>
+    <div class="mockline"><div><b>Luyện Xâu chuỗi</b><span>12 chuỗi · 30 hoặc 20 giây${drillBest('r2')!=null?` · cao nhất ${drillBest('r2')}%`:''}</span></div>
+    <button class="btn line small" id="drR2">Luyện</button></div>`;
   $('#dailyBtn').onclick=()=>begin(dailySet());
   $('#mockBtn').onclick=mockIntro;
+  $('#drHoan').onclick=()=>drillIntro('hoan'); $('#drR2').onclick=()=>drillIntro('r2');
 }
 /* ===== THI THỬ SƠ TUYỂN: 50 câu phản xạ trong 15 phút, đạt từ 25 câu ===== */
 const MOCK_N=50, MOCK_SECS=600, MOCK_PASS=25, MOCKK='nvtv_mock_v1';
@@ -188,6 +193,111 @@ function mockEnd(){
     <button class="btn line" id="mockHome">Về trang chủ</button>`;
   show('final');
   $('#mockAgain').onclick=mockIntro; $('#mockHome').onclick=goHome;
+}
+/* ===== LUYỆN ĐIỂM YẾU: Hoàn thiện cụm từ (10 giây/câu) và Xâu chuỗi ===== */
+const DRILL = {
+  hoan:{name:'Hoàn thiện cụm từ', n:20, secs:10, unit:'câu', key:q=>kR1(q),
+    pool:()=>POOL.r1.filter(q=>q.t==='hoan' && q.a.split(' ').length<=8)},
+  r2:{name:'Xâu chuỗi', n:12, secs:30, unit:'chuỗi', key:c=>kR2(c), pool:()=>POOL.r2}
+};
+const WEAKK='nvtv_weak_v1', DHK='nvtv_drill_v1';
+function getJ(k,d){ try{ return JSON.parse(localStorage.getItem(k)||'null')||d; }catch(e){ return d; } }
+function setJ(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+function drillBest(kind){ const h=getJ(DHK,{})[kind]||[]; return h.length?Math.max(...h.map(x=>x.p)):null; }
+function weakOf(kind){ const W=getJ(WEAKK,{}), D=DRILL[kind]; return D.pool().filter(x=>W[D.key(x)]); }
+// Ưu tiên câu từng làm sai (tối đa nửa lượt), phần còn lại là câu chưa gặp
+function drillSet(kind, only){
+  const D=DRILL[kind];
+  if(only) return shuffle(only.slice());
+  const weak=shuffle(weakOf(kind)).slice(0,Math.floor(D.n/2)), has=new Set(weak);
+  let rest;
+  if(kind==='r2'){ const p=D.pool().filter(c=>!has.has(c)), need=D.n-weak.length, np=Math.ceil(need/2);
+    rest=pickFresh(p.filter(c=>SRC[c]),np,kR2); rest=rest.concat(pickFresh(p.filter(c=>!SRC[c]&&!rest.includes(c)),need-rest.length,kR2)); }
+  else rest=pickFresh(D.pool().filter(q=>!has.has(q)), D.n-weak.length, kR1);
+  const out=shuffle(weak.concat(rest));
+  return kind==='r2' ? out.sort((a,b)=>a.split(' ').length-b.split(' ').length) : out;
+}
+function drillIntro(kind){
+  ac(); if(AUD.ctx&&AUD.ctx.state==='suspended') AUD.ctx.resume(); stopMusic();
+  const D=DRILL[kind], nw=weakOf(kind).length, h=(getJ(DHK,{})[kind]||[]).slice(-5).reverse();
+  const rules = kind==='hoan'
+    ? [`${D.n} câu Hoàn thiện cụm từ: phụ âm hiện sẵn, nguyên âm bị ẩn (Ch_ ng_p ph__ r___), gõ lại cả cụm có dấu.`,
+       'Mỗi câu chỉ có 10 giây. Hết giờ app hiện đáp án rồi sang câu mới.',
+       'Mẹo: đọc nhanh khung phụ âm đầu mỗi tiếng, nghĩ tới thành ngữ, tục ngữ quen; gõ không dấu cũng được nếu đúng chữ (app chấp nhận dấu đặt khác vị trí).']
+    : [`${D.n} chuỗi, nửa là câu thơ, dài dần. Chạm các từ theo đúng thứ tự; từ viết hoa là từ mở đầu.`,
+       'Chọn thời gian: 30 giây như chương trình, hoặc 20 giây để luyện tăng tốc.',
+       'Mẹo: tìm từ viết hoa trước, rồi ghép cặp từ hay đi liền nhau; câu thơ thường 5, 6, 7 hoặc 8 tiếng.'];
+  $('#intro').innerHTML=`<span class="eyebrow">Luyện điểm yếu</span>
+    <h2 class="big">${D.name}</h2>
+    <ul class="rules">${rules.map(r=>`<li>${esc(r)}</li>`).join('')}
+      <li>${nw?`Đang có <b>${nw}</b> ${D.unit} từng làm sai; mỗi lượt tự đưa lại tối đa ${Math.floor(D.n/2)} ${D.unit} để ôn. Làm đúng lại thì ${D.unit} đó được gỡ khỏi danh sách.`:'Câu làm sai sẽ được ghi lại và đưa ra ôn ở các lượt sau.'}</li></ul>
+    ${h.length?`<div class="board">${h.map(x=>`<div class="prow"><span class="rk">·</span><span>${esc(x.d)}</span><span class="pill ${x.p>=80?'go':'out'}">${x.p}%</span><span class="pts">${x.s}/${x.n}</span></div>`).join('')}</div>`:''}
+    ${kind==='r2'?`<div class="actions"><button class="btn gold" id="goD30">30 giây/chuỗi</button><button class="btn line" id="goD20">20 giây/chuỗi</button></div>`
+      :`<button class="btn gold" id="goD">Bắt đầu · 10 giây/câu</button>`}
+    ${nw?`<button class="btn line" id="goW">Chỉ ôn ${Math.min(nw,D.n)} ${D.unit} từng sai</button>`:''}
+    <button class="btn line" id="backD">Về trang chủ</button>`;
+  show('intro');
+  $('#backD').onclick=goHome;
+  const go=(secs,only)=>startDrill(kind, secs, only);
+  if(kind==='r2'){ $('#goD30').onclick=()=>go(30); $('#goD20').onclick=()=>go(20); } else $('#goD').onclick=()=>go(10);
+  if(nw) $('#goW').onclick=()=>go(kind==='r2'?30:10, shuffle(weakOf(kind)).slice(0,D.n));
+}
+function startDrill(kind, secs, only){
+  const D=DRILL[kind];
+  newGame({name:D.name,r1:[],r2:[],soan:[[]]});
+  const qs=drillSet(kind, only); G.drill={kind,secs,qs,res:[]};
+  markSeen(qs.map(D.key));
+  $('#hintBtn').hidden=true; $('#skipBtn').textContent='Bỏ qua (xem đáp án)';
+  show('play');
+  const tok=++G.tok; let i=0;
+  function next(){
+    if(tok!==G.tok) return; if(curTimer) curTimer.stop();
+    if(i>=qs.length){ drillEnd(); return; }
+    const q=qs[i], box=$('#qcard'); box.className='card'; let finished=false, ctl, t0=performance.now();
+    hud('Luyện · '+D.name, `${kind==='r2'?'Chuỗi':'Câu'} ${i+1}/${qs.length} · đúng ${G.drill.res.filter(r=>r.ok).length}`);
+    const finish=ok=>{ if(finished) return; finished=true; curTimer.stop();
+      G.drill.res.push({q,ok,t:(performance.now()-t0)/1000});
+      if(ok) addMe(kind==='r2'?20:10); else { sfx.bad(); ctl.reveal(); }
+      const src=kind==='r2'&&SRC[q]?`<p class="reveal">Trích: ${esc(SRC[q])}</p>`:'';
+      if(!ok) box.insertAdjacentHTML('beforeend',`<p class="reveal">Đáp án: <b>${esc(kind==='r2'?q:q.a)}</b></p>`);
+      if(src) box.insertAdjacentHTML('beforeend',src);
+      i++; setTimeout(next, ok?(src?1500:500):(src?2600:2200)); };
+    if(kind==='hoan'){
+      box.innerHTML=`<div class="qtype">Hoàn thiện cụm từ · ${q.a.split(' ').length} tiếng</div><div class="qtext big">${esc(q.q)}</div>`;
+      ctl=typed(box, q.a, ()=>finish(true), 'Gõ cả cụm có dấu');
+    } else {
+      const words=q.split(' ');
+      box.innerHTML=`<div class="qtype">Chuỗi ${words.length} từ · ${SRC[q]?'sắp thành câu thơ':'sắp thành câu'}</div>`;
+      ctl=arrange(box, words, [words.length], 'word', ()=>finish(true));
+    }
+    cur={hint:null, skip:()=>finish(false)};
+    curTimer=new Timer(secs,null,()=>{ if(tok===G.tok) finish(false); }); curTimer.start();
+  }
+  next();
+}
+function drillEnd(){
+  G.tok++; if(curTimer) curTimer.stop(); cur={hint:null,skip:null};
+  $('#hintBtn').hidden=false; $('#skipBtn').textContent='Bỏ qua';
+  const {kind,secs,qs,res}=G.drill, D=DRILL[kind];
+  const ok=res.filter(r=>r.ok), p=Math.round(100*ok.length/Math.max(1,res.length));
+  const avg=ok.length?(ok.reduce((s,r)=>s+r.t,0)/ok.length).toFixed(1):'–';
+  const W=getJ(WEAKK,{}); res.forEach(r=>{ const k=D.key(r.q); if(r.ok) delete W[k]; else W[k]=(W[k]||0)+1; }); setJ(WEAKK,W);
+  const now=new Date(), d=`${pad(now.getDate())}/${pad(now.getMonth()+1)} ${pad(now.getHours())}:${pad(now.getMinutes())} · ${secs}s`;
+  const H=getJ(DHK,{}); (H[kind]=H[kind]||[]).push({d,s:ok.length,n:res.length,p}); H[kind]=H[kind].slice(-30); setJ(DHK,H);
+  p>=80 ? sfx.fanfare() : sfx.lose();
+  const wrong=res.filter(r=>!r.ok);
+  $('#final').innerHTML=`<div class="logo"><span class="eyebrow">Luyện điểm yếu · ${esc(D.name)} · ${secs} giây</span>
+      <h2 class="big">${ok.length}/${res.length} ${D.unit} đúng</h2>
+      <p class="muted">${p>=90?'Rất chắc tay. Thử giảm thời gian hoặc chuyển sang dạng khác.':p>=70?'Khá tốt. Ôn lại các câu sai bên dưới rồi làm lượt mới.':'Cần luyện thêm. Đọc kỹ đáp án các câu sai, lát nữa bấm “Ôn lại câu sai”.'}</p></div>
+    <div class="stats"><div><b>${p}%</b><span>Tỉ lệ đúng</span></div><div><b>${avg}s</b><span>TB mỗi câu đúng</span></div><div><b>${drillBest(kind)}%</b><span>Cao nhất</span></div></div>
+    ${wrong.length?`<span class="eyebrow">Cần ôn lại (${wrong.length})</span>
+    <div class="board">${wrong.map(r=>`<div class="prow" style="grid-template-columns:1fr"><span>${kind==='hoan'?`<span class="muted">${esc(r.q.q)}</span> → `:''}<b style="color:var(--gold-hi)">${esc(kind==='r2'?r.q:r.q.a)}</b>${kind==='r2'&&SRC[r.q]?`<br><span class="muted" style="font-size:12px">${esc(SRC[r.q])}</span>`:''}</span></div>`).join('')}</div>`:''}
+    ${wrong.length?`<button class="btn gold" id="dWrong">Ôn lại ${wrong.length} ${D.unit} sai ngay</button>`:''}
+    <button class="btn ${wrong.length?'line':'gold'}" id="dAgain">Lượt mới</button>
+    <button class="btn line" id="dHome">Về trang chủ</button>`;
+  show('final');
+  if(wrong.length) $('#dWrong').onclick=()=>startDrill(kind, secs, wrong.map(r=>r.q));
+  $('#dAgain').onclick=()=>drillIntro(kind); $('#dHome').onclick=goHome;
 }
 function begin(T){ ac(); if(AUD.ctx&&AUD.ctx.state==='suspended') AUD.ctx.resume(); if(!AUD.music) startMusic(); newGame(T); intro(1); }
 function goHome(){ renderToday(); show('home'); }
